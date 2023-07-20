@@ -10,16 +10,22 @@ import (
 
 // Post represents a post in the application
 type Post struct {
-	ID      string `json:"id"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
+	ID    string `json:"id"`
+	Title string `json:"title"`
 }
 
 // postsData represents a dummy data store for posts
 var postsData = []*Post{
-	{ID: "1", Title: "Post 1", Content: "Content of Post 1"},
-	{ID: "2", Title: "Post 2", Content: "Content of Post 2"},
-	{ID: "3", Title: "Post 3", Content: "Content of Post 3"},
+	{ID: "1", Title: "Post 1"},
+	{ID: "2", Title: "Post 2"},
+	{ID: "3", Title: "Post 3"},
+	{ID: "4", Title: "Post 4"},
+	{ID: "5", Title: "Post 5"},
+	{ID: "6", Title: "Post 6"},
+	{ID: "7", Title: "Post 7"},
+	{ID: "8", Title: "Post 8"},
+	{ID: "9", Title: "Post 9"},
+	{ID: "10", Title: "Post 10"},
 	// Add more posts here
 }
 
@@ -28,83 +34,42 @@ var postType = graphql.NewObject(
 	graphql.ObjectConfig{
 		Name: "Post",
 		Fields: graphql.Fields{
-			"id":      &graphql.Field{Type: graphql.ID},
-			"title":   &graphql.Field{Type: graphql.String},
-			"content": &graphql.Field{Type: graphql.String},
+			"id":    &graphql.Field{Type: graphql.ID},
+			"title": &graphql.Field{Type: graphql.String},
 		},
 	},
 )
 
-// Define a connection type for pagination
-var postConnection = graphql.NewObject(
+// Define the root query
+var rootQuery = graphql.NewObject(
 	graphql.ObjectConfig{
-		Name: "PostConnection",
+		Name: "Query",
 		Fields: graphql.Fields{
-			"edges": &graphql.Field{
-				Type: graphql.NewList(postEdge),
-				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					// Dummy resolve function to return the list of post edges
-					// based on the provided pagination arguments (not implemented in this example)
-					return postsData, nil
+			"posts": &graphql.Field{
+				Type: graphql.NewList(postType),
+				Args: graphql.FieldConfigArgument{
+					"offset": &graphql.ArgumentConfig{
+						Type:         graphql.Int,
+						DefaultValue: 0,
+					},
+					"limit": &graphql.ArgumentConfig{
+						Type:         graphql.Int,
+						DefaultValue: 10,
+					},
 				},
-			},
-			"pageInfo": &graphql.Field{
-				Type: pageInfo,
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					// Dummy resolve function to return the page info
-					// based on the provided pagination arguments (not implemented in this example)
-					return map[string]interface{}{
-						"hasNextPage": false,
-						"endCursor":   nil,
-					}, nil
-				},
-			},
-		},
-	},
-)
+					// Retrieve the offset and limit values from the arguments
+					offset := p.Args["offset"].(int)
+					limit := p.Args["limit"].(int)
 
-// Define an edge type for pagination
-var postEdge = graphql.NewObject(
-	graphql.ObjectConfig{
-		Name: "PostEdge",
-		Fields: graphql.Fields{
-			"cursor": &graphql.Field{
-				Type: graphql.ID,
-				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					// Dummy resolve function to return the cursor for the current post (not implemented in this example)
-					// You can implement actual logic to retrieve the cursor value for each post
-					return "cursor_value", nil
-				},
-			},
-			"node": &graphql.Field{
-				Type: postType,
-				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					// Resolve and return the current post based on the provided cursor (pagination) (implemented in this example)
-					post := p.Source.(*Post)
-					return post, nil
-				},
-			},
-		},
-	},
-)
+					// Implement your pagination logic here
+					startIndex := offset
+					endIndex := offset + limit
+					if endIndex > len(postsData) {
+						endIndex = len(postsData)
+					}
 
-// Define the page info type for pagination
-var pageInfo = graphql.NewObject(
-	graphql.ObjectConfig{
-		Name: "PageInfo",
-		Fields: graphql.Fields{
-			"hasNextPage": &graphql.Field{
-				Type: graphql.Boolean,
-				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					// Dummy resolve function to return the hasNextPage value (not implemented in this example)
-					return false, nil
-				},
-			},
-			"endCursor": &graphql.Field{
-				Type: graphql.String,
-				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					// Dummy resolve function to return the endCursor value (not implemented in this example)
-					return nil, nil
+					return postsData[startIndex:endIndex], nil
 				},
 			},
 		},
@@ -112,59 +77,6 @@ var pageInfo = graphql.NewObject(
 )
 
 func main() {
-	// Define the root query
-	// ...
-
-	// Define the root query
-	rootQuery := graphql.NewObject(
-		graphql.ObjectConfig{
-			Name: "Query",
-			Fields: graphql.Fields{
-				"posts": &graphql.Field{
-					Type: postConnection,
-					Args: graphql.FieldConfigArgument{
-						"first": &graphql.ArgumentConfig{
-							Type:         graphql.Int,
-							DefaultValue: 10,
-						},
-						"after": &graphql.ArgumentConfig{
-							Type: graphql.String,
-						},
-					},
-					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						// Implement the resolve function to return the posts with pagination
-						// based on the provided "first" and "after" arguments
-						first := p.Args["first"].(int)
-						afterCursor := p.Args["after"].(string)
-
-						// Implement your pagination logic here
-						// For simplicity, we'll return a subset of posts from the dummy data store
-						var startIndex int
-						for i, post := range postsData {
-							if post.ID == afterCursor {
-								startIndex = i + 1
-								break
-							}
-						}
-
-						if startIndex >= len(postsData) {
-							return nil, nil
-						}
-
-						endIndex := startIndex + first
-						if endIndex > len(postsData) {
-							endIndex = len(postsData)
-						}
-
-						return postsData[startIndex:endIndex], nil
-					},
-				},
-			},
-		},
-	)
-
-	// ...
-
 	// Define the GraphQL schema
 	schema, err := graphql.NewSchema(
 		graphql.SchemaConfig{
