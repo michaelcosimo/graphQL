@@ -1,0 +1,7 @@
+
+
+curl --location 'http://localhost:8080/graphql' \
+--header 'Content-Type: application/json' \
+--data '{
+  "query": "query { posts(offset: 0, limit: 2) { id title } }"
+}'
