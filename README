@@ -1,20 +1,26 @@
-With this updated code, you can use the "after" argument in your GraphQL query to paginate the posts using the cursor-based approach. For example, using the following cURL request:
-
-bash
-Copy code
-curl -X POST -H "Content-Type: application/json" -d '{
-  "query": "query { posts(first: 2) { edges { cursor node { id title } } pageInfo { hasNextPage endCursor } } }"
-}' http://localhost:8080/graphql
-You will get the first 2 posts in the response along with the pageInfo containing hasNextPage and endCursor information for further pagination. To fetch the next set of posts after the cursor, use the "after" argument with the cursor value from the last item of the previous page.
-
-For example, to fetch the next 2 posts after the cursor "2", you can use the following cURL request:
-
-bash
-Copy code
-curl -X POST -H "Content-Type: application/json" -d '{
+this wil not work due to authentication
+curl --location 'http://localhost:8080/graphql' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer anything' \
+--data '{
   "query": "query { posts(first: 2, after: \"2\") { edges { cursor node { id title } } pageInfo { hasNextPage endCursor } } }"
-}' http://localhost:8080/graphql
-This approach enables efficient pagination with cursors, providing a scalable and user-friendly way to navigate through large datasets.
+}'
+
+this will fail due to lack of authorization
+curl --location 'http://localhost:8080/graphql' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer client_api_key' \
+--data '{
+  "query": "query { posts(first: 2, after: \"2\") { edges { cursor node { id title } } pageInfo { hasNextPage endCursor } } }"
+}'
+
+this will work
+curl --location 'http://localhost:8080/graphql' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer admin_api_key' \
+--data '{
+  "query": "query { posts(first: 2, after: \"2\") { edges { cursor node { id title } } pageInfo { hasNextPage endCursor } } }"
+}'
 
 
 
