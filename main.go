@@ -3,71 +3,59 @@ package main
 import (
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/handler"
 )
 
-// Book represents a book in the library
-type Book struct {
-	ID          string    `json:"id"`
-	Title       string    `json:"title"`
-	Author      string    `json:"author"`
-	Description string    `json:"description"`
-	Price       float64   `json:"price"`
-	IsAvailable bool      `json:"isAvailable"`
-	RentedBy    string    `json:"rentedBy,omitempty"`
-	RentedAt    time.Time `json:"rentedAt,omitempty"`
+// Post represents a post in the application
+type Post struct {
+	ID      string `json:"id"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
 }
 
-// Define GraphQL types for Book
-var bookType = graphql.NewObject(
+// postsData represents a dummy data store for posts
+var postsData = []*Post{
+	{ID: "1", Title: "Post 1", Content: "Content of Post 1"},
+	{ID: "2", Title: "Post 2", Content: "Content of Post 2"},
+	{ID: "3", Title: "Post 3", Content: "Content of Post 3"},
+	// Add more posts here
+}
+
+// Define the GraphQL type for Post
+var postType = graphql.NewObject(
 	graphql.ObjectConfig{
-		Name: "Book",
+		Name: "Post",
 		Fields: graphql.Fields{
-			"id":          &graphql.Field{Type: graphql.String},
-			"title":       &graphql.Field{Type: graphql.String},
-			"author":      &graphql.Field{Type: graphql.String},
-			"description": &graphql.Field{Type: graphql.String},
-			"price":       &graphql.Field{Type: graphql.Float},
-			"isAvailable": &graphql.Field{Type: graphql.Boolean},
-			"rentedBy":    &graphql.Field{Type: graphql.String},
-			"rentedAt":    &graphql.Field{Type: graphql.DateTime},
+			"id":      &graphql.Field{Type: graphql.ID},
+			"title":   &graphql.Field{Type: graphql.String},
+			"content": &graphql.Field{Type: graphql.String},
 		},
 	},
 )
 
-// Define the root query
-var rootQuery = graphql.NewObject(
+// Define a connection type for pagination
+var postConnection = graphql.NewObject(
 	graphql.ObjectConfig{
-		Name: "Query",
+		Name: "PostConnection",
 		Fields: graphql.Fields{
-			"book": &graphql.Field{
-				Type: bookType,
-				Args: graphql.FieldConfigArgument{
-					"id": &graphql.ArgumentConfig{
-						Type: graphql.String,
-					},
-				},
+			"edges": &graphql.Field{
+				Type: graphql.NewList(postEdge),
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					// Retrieve the book by ID
-					id, ok := p.Args["id"].(string)
-					if !ok {
-						return nil, nil
-					}
-
-					// Retrieve book data from the database or other sources
-					// Here, we're returning dummy data for demonstration purposes
-					return &Book{
-						ID:          id,
-						Title:       "Book Title",
-						Author:      "Book Author",
-						Description: "Book Description",
-						Price:       9.99,
-						IsAvailable: true,
-						RentedBy:    "John Doe",
-						RentedAt:    time.Now(),
+					// Dummy resolve function to return the list of post edges
+					// based on the provided pagination arguments (not implemented in this example)
+					return postsData, nil
+				},
+			},
+			"pageInfo": &graphql.Field{
+				Type: pageInfo,
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					// Dummy resolve function to return the page info
+					// based on the provided pagination arguments (not implemented in this example)
+					return map[string]interface{}{
+						"hasNextPage": false,
+						"endCursor":   nil,
 					}, nil
 				},
 			},
@@ -75,46 +63,48 @@ var rootQuery = graphql.NewObject(
 	},
 )
 
-// Define the root mutation
-var rootMutation = graphql.NewObject(
+// Define an edge type for pagination
+var postEdge = graphql.NewObject(
 	graphql.ObjectConfig{
-		Name: "Mutation",
+		Name: "PostEdge",
 		Fields: graphql.Fields{
-			"rentBook": &graphql.Field{
-				Type: bookType,
-				Args: graphql.FieldConfigArgument{
-					"id": &graphql.ArgumentConfig{
-						Type: graphql.String,
-					},
-					"rentedBy": &graphql.ArgumentConfig{
-						Type: graphql.String,
-					},
-				},
+			"cursor": &graphql.Field{
+				Type: graphql.ID,
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					// Retrieve the book by ID
-					id, ok := p.Args["id"].(string)
-					if !ok {
-						return nil, nil
-					}
+					// Dummy resolve function to return the cursor for the current post (not implemented in this example)
+					// You can implement actual logic to retrieve the cursor value for each post
+					return "cursor_value", nil
+				},
+			},
+			"node": &graphql.Field{
+				Type: postType,
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					// Resolve and return the current post based on the provided cursor (pagination) (implemented in this example)
+					post := p.Source.(*Post)
+					return post, nil
+				},
+			},
+		},
+	},
+)
 
-					// Retrieve additional input
-					rentedBy, _ := p.Args["rentedBy"].(string)
-
-					// Rent the book
-					book := &Book{
-						ID:          id,
-						Title:       "Book Title",
-						Author:      "Book Author",
-						Description: "Book Description",
-						Price:       9.99,
-						IsAvailable: false,
-						RentedBy:    rentedBy,
-						RentedAt:    time.Now(),
-					}
-
-					// Persist the rented book data in the database or other sources
-					// Here, we're simply returning the rented book for demonstration purposes
-					return book, nil
+// Define the page info type for pagination
+var pageInfo = graphql.NewObject(
+	graphql.ObjectConfig{
+		Name: "PageInfo",
+		Fields: graphql.Fields{
+			"hasNextPage": &graphql.Field{
+				Type: graphql.Boolean,
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					// Dummy resolve function to return the hasNextPage value (not implemented in this example)
+					return false, nil
+				},
+			},
+			"endCursor": &graphql.Field{
+				Type: graphql.String,
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					// Dummy resolve function to return the endCursor value (not implemented in this example)
+					return nil, nil
 				},
 			},
 		},
@@ -122,11 +112,63 @@ var rootMutation = graphql.NewObject(
 )
 
 func main() {
+	// Define the root query
+	// ...
+
+	// Define the root query
+	rootQuery := graphql.NewObject(
+		graphql.ObjectConfig{
+			Name: "Query",
+			Fields: graphql.Fields{
+				"posts": &graphql.Field{
+					Type: postConnection,
+					Args: graphql.FieldConfigArgument{
+						"first": &graphql.ArgumentConfig{
+							Type:         graphql.Int,
+							DefaultValue: 10,
+						},
+						"after": &graphql.ArgumentConfig{
+							Type: graphql.String,
+						},
+					},
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						// Implement the resolve function to return the posts with pagination
+						// based on the provided "first" and "after" arguments
+						first := p.Args["first"].(int)
+						afterCursor := p.Args["after"].(string)
+
+						// Implement your pagination logic here
+						// For simplicity, we'll return a subset of posts from the dummy data store
+						var startIndex int
+						for i, post := range postsData {
+							if post.ID == afterCursor {
+								startIndex = i + 1
+								break
+							}
+						}
+
+						if startIndex >= len(postsData) {
+							return nil, nil
+						}
+
+						endIndex := startIndex + first
+						if endIndex > len(postsData) {
+							endIndex = len(postsData)
+						}
+
+						return postsData[startIndex:endIndex], nil
+					},
+				},
+			},
+		},
+	)
+
+	// ...
+
 	// Define the GraphQL schema
 	schema, err := graphql.NewSchema(
 		graphql.SchemaConfig{
-			Query:    rootQuery,
-			Mutation: rootMutation,
+			Query: rootQuery,
 		},
 	)
 	if err != nil {
@@ -135,9 +177,8 @@ func main() {
 
 	// Create a new GraphQL handler with the schema
 	h := handler.New(&handler.Config{
-		Schema:   &schema,
-		Pretty:   true,
-		GraphiQL: true,
+		Schema: &schema,
+		Pretty: true,
 	})
 
 	// Serve the GraphQL endpoint
