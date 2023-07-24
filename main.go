@@ -31,14 +31,10 @@ func main() {
 	// // Wrap in authorization
 	a := middleware.AuthMiddleware(h)
 
-	// // Wrap the GraphQL handler with the caching middleware
-	// c := middleware.CachingMiddleware(a)
-
-	// // Wrap the GraphQL handler with the stitching middleware (placeholder for potential future use)
-	// s := middleware.StitchingMiddleware(c)
+	r := middleware.ErrorHandler(schema, a)
 
 	// Wrap the GraphQL handler with the authentication and authorization middleware
-	http.Handle("/graphql", a)
+	http.Handle("/graphql", r)
 
 	log.Println("Server is running on http://localhost:8080/graphql")
 	log.Fatal(http.ListenAndServe(":8080", nil))

@@ -32,16 +32,6 @@ var PostType = graphql.NewObject(
 	},
 )
 
-// var postType = graphql.NewObject(
-// 	graphql.ObjectConfig{
-// 		Name: "Post",
-// 		Fields: graphql.Fields{
-// 			"id":    &graphql.Field{Type: graphql.ID},
-// 			"title": &graphql.Field{Type: graphql.String},
-// 		},
-// 	},
-// )
-
 // Define an edge type for pagination
 var PostEdge = graphql.NewObject(
 	graphql.ObjectConfig{
