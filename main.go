@@ -28,10 +28,10 @@ func main() {
 		Pretty: true,
 	})
 
-	// // Wrap in authorization
-	a := middleware.AuthMiddleware(h)
+	a := middleware.ErrorHandler(schema, h)
 
-	r := middleware.ErrorHandler(schema, a)
+	// // Wrap in authorization
+	r := middleware.AuthMiddleware(a)
 
 	// Wrap the GraphQL handler with the authentication and authorization middleware
 	http.Handle("/graphql", r)

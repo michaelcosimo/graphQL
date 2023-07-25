@@ -1,27 +1,4 @@
-this wil not work due to authentication
-curl --location 'http://localhost:8080/graphql' \
---header 'Content-Type: application/json' \
---header 'Authorization: Bearer anything' \
---data '{
-  "query": "query { posts(first: 2, after: \"2\") { edges { cursor node { id title } } pageInfo { hasNextPage endCursor } } }"
-}'
-
-this will fail due to lack of authorization
-curl --location 'http://localhost:8080/graphql' \
---header 'Content-Type: application/json' \
---header 'Authorization: Bearer client_api_key' \
---data '{
-  "query": "query { posts(first: 2, after: \"2\") { edges { cursor node { id title } } pageInfo { hasNextPage endCursor } } }"
-}'
-
-this will work
-curl --location 'http://localhost:8080/graphql' \
---header 'Content-Type: application/json' \
---header 'Authorization: Bearer admin_api_key' \
---data '{
-  "query": "query { posts(first: 2, after: \"2\") { edges { cursor node { id title } } pageInfo { hasNextPage endCursor } } }"
-}'
-
+go test
 
 
 
